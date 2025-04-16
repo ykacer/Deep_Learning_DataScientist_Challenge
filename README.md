@@ -145,7 +145,7 @@ Following changes are more groundbreaking and need much experimentation time to 
 * If RetinaNet FPN is not using all layer maps, try adding more (specifically add the first conv maps if small objects are missing)
 
 
-# II/ Models can be hard to train
+## II/ Models can be hard to train
 
 Our segmentation model is running poorly and we need to provide a diagnosis and some corrections to reach a peformant training. Here are the observations made:
 
@@ -183,7 +183,7 @@ In the following subsections, we will :
 - Provide ideas and tricks that overcome the issue
 
 
-## II.1/ Issue analysis
+### II.1/ Issue analysis
 
 Here are the diagnosis bullet points according to assumptions made on last training:
 
@@ -203,7 +203,7 @@ Following are the other statements we could make to enrich the diagnosis if we h
 
 - Having access to masks could let us count number of building pixels in each sample and plot train/val distributions, to also confirm if there is possible outliers in the validation set
 
-## II.2/ Tricks and improvments
+### II.2/ Tricks and improvments
 
 As we did in the first part, we will depict solutions from simple to advanced
 
