@@ -145,4 +145,89 @@ Following changes are more groundbreaking and need much experimentation time to 
 * If RetinaNet FPN is not using all layer maps, try adding more (specifically add the first conv maps if small objects are missing)
 
 
+# II/ Models can be hard to train
+
+Our segmentation model is running poorly and we need to provide a diagnosis and some corrections to reach a peformant training. Here are the observations made:
+
+| Observation | value |
+|-------------|-------|
+| epochs      | 10    |
+| training accuracy | increasing to 90% |
+| validation accuracy | constant to 85% |
+| masks | all background pixels in all epochs |
+
+
+First of all, let's describe very briefly how Unet works. Unet is an end-to-end architecture for image to image use case, composed of two main seqential parts:
+
+- *Encoder* 
+
+  that convolve+downsize input image multiple times to extract feature maps at different scales
+
+- *Decoder*
+
+  that deconvolve the last feature map many times to reach the original image size, using skip connections from intermediate feature maps to get insights on input details at different scales.
+
+Then the training learns to recreate the desired output image (segmentation mask, but can also be denoised image for example), meaning at each epoch:
+- the encoder learns the feature maps that matter for target construction
+- the decoder learns upscaling deconvolutions to construct target image using feature maps
+Same as object detector, Unet uses well known CNN as encoder (backbone) to benefit from checkpoint image classification weights as initializer for fast and stable convergence.
+
+
+In the following subsections, we will :
+
+- Provide analyis on why predicted mask are background only pixels and how provided quantitative/qualitative observationsh helps in the issue iagnosis
+((((- enumerate which complementary observations it would great to have to refine the issue diagnosis))))
+
+- Explain how we can better monitor training to anticipate the issue
+
+- Provide ideas and tricks that overcome the issue
+
+
+## II.1/ Issue analysis
+
+Here are the diagnosis bullet points according to assumptions made on last training:
+
+- It appears that Unet has overfitted on background pixels very early due to class imbalancing, which is very common in segmentation use case.
+
+- The fact that validation set reaches the plateau "immediately" shows that there is possible mismatch between train and val distributions
+
+- This mismatch is corroborated by the difference of backgroud:building pixel ratio between train (90%) and validation (85%)
+
+- The fact that training accuracy has rapidly reached the 90% plateau shows that learning rate is certainly too high
+
+Following are the other statements we could make to enrich the diagnosis if we had the necessary feedbacks:
+
+- Having access to feature maps would be helpful to verify if model is learning something (are the early maps responding at building pixels location?)
+
+- Having access to image size distribution for training and validation would also be helpful to confirm if there is a mismatch between both distribution
+
+- Having access to masks could let us count number of building pixels in each sample and plot train/val distributions, to also confirm if there is possible outliers in the validation set
+
+## II.2/ Tricks and improvments
+
+As we did in the first part, we will depict solutions from simple to advanced
+
+- *Training hyperparameters*
+
+	- First of all, we should switch to more advanced metrics like F1score, Precision and Recall when monitoring training, those metrics are more meaningful in the presence of imbalanced dataset
+	
+  - As stated in the previous section, learning seems high so we can keep ADAM optimizer but with a lower learning rate to prevent the model from reaching "easy" minimum
+	
+  - If the model shows high probability outputs for majority class during training, we can lower loss contributions of those "easy" examples using Focal loss
+	
+  - Overfitting can also be overcome using more basic tricks like dropout and early stopping
+
+- *Data modifications*
+	
+  - Up-sample validation set to increase the background:building pixel ratio from 85% to 90%, thus matching training set pixel ratio.
+	
+  - Perform data augmentation, particularly random cropping to provide examples with majority building pixels and let model focus on buildings features extraction.
+
+- *Architecture changes*
+	
+  - Add batch normalization layers in the architecture to help to reduce overfitting
+	
+  - Normalize the inputs to prevent any outliers from disturbing the training convergence
+	
+  - Using pretrained weights checkpoint allow to move the training starting point away from the "easy" minimum
 
