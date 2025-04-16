@@ -231,3 +231,67 @@ As we did in the first part, we will depict solutions from simple to advanced
 	
   - Using pretrained weights checkpoint allow to move the training starting point away from the "easy" minimum
 
+
+# III/ DL model is the heart, but post-processing is important !
+
+In this part, we will focus on the image segmentation mask of an aerial image, and its ability to well isolate very small vehicles (few tens pixels ).
+
+The source code we will use and demo below, can be found [here](https://github.com/ykacer/Deep_Learning_DataScientist_Challenge).
+
+## III.1/ load shape file and explore data
+
+
+
+In this subsection, we will do a brief data exploration by first using free opensoure qgis software to add two layers:
+- Vectors from .shp file provided
+- Tif raster provided
+
+By adjusting the color transparency we can get an explorable illustration of the zone :
+
+![img](.thumbnails/qgis.png)
+
+At the bottom right, we can identify the Geographic Coordinate System for the points, it is `EPSG:4326` also known as `WGS84`.
+
+We will further use [utm](https://pypi.org/project/utm/) python package to convert those points into `UTM` Project Coordinate System and get points as (x,y) coordinates in meters.
+
+
+But first, we need to load the shapes using [pyshapefile](https://pypi.org/project/pyshp/) python package to read the shapefile containing a bouding box and polygons points list associated to each shape.
+
+
+```
+>>> import shapefile
+>>> sf = shapefile.Reader("Separation_Objets/cars")
+>>> shapes = sf.shapes()
+>>> len(shapes)
+73
+```
+
+We can get the limit of the zone in terms of Geographic Coordinates (longitude, latitude and identify the zone in Google Earth (Syria):
+
+```
+>>> from src.utils.coordinates import get_bounding_box_zone
+>>> get_bounding_box_zone(shapes)
+((37.08373932980426, 36.6336931205609),
+ (37.08617948676869, 36.6336931205609),
+ (37.08617948676869, 36.63143895973405),
+ (37.08373932980426, 36.63143895973405))
+```
+
+![img](.thumbnails/google_earth_zone.png)
+
+Let's then project the Geographic Coordinates into meters Project Coordinates UTM ...
+
+```
+from src.utils.converter import project_and_normalize_shapes
+shapes_normalized = project_and_normalize_shapes(shapes)
+```
+
+... and use a function to re-build the mask with project meters coordinates
+
+```
+from src.core.morphology import get_cv2_contours_from_shapes
+from src.utils.display import draw_cc_from_contours
+draw_cc_from_contours(contours);
+```
+![img](.thumbnails/mask_with_meters.png)
+
