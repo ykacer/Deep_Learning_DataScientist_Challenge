@@ -234,12 +234,11 @@ As we did in the first part, we will depict solutions from simple to advanced
 
 # III/ DL model is the heart, but post-processing is important !
 
-In this part, we will focus on the image segmentation mask of an aerial image, and its ability to well isolate very small vehicles (few tens pixels ).
+In this part, we will focus on the image segmentation mask of an aerial image, and its weaknesses to well isolate very small vehicles (few tens pixels ). We will propose a path to analyse the results and implement an efficient post processing step by step.
 
-The source code we will use and demo below, can be found [here](https://github.com/ykacer/Deep_Learning_DataScientist_Challenge).
+The source code we will use and demo below, can be found [here](https://github.com/ykacer/Deep_Learning_DataScientist_Challenge/src).
 
 ## III.1/ load shape file and explore data
-
 
 
 In this subsection, we will do a brief data exploration by first using free opensoure qgis software to add two layers:
@@ -266,7 +265,7 @@ But first, we need to load the shapes using [pyshapefile](https://pypi.org/proje
 73
 ```
 
-We can get the limit of the zone in terms of Geographic Coordinates (longitude, latitude and identify the zone in Google Earth (Syria):
+We can get the limit of the zone in terms of Geographic Coordinates (longitude, latitude) and identify the zone in Google Earth (Syria):
 
 ```
 >>> from src.utils.coordinates import get_bounding_box_zone
@@ -295,3 +294,37 @@ draw_cc_from_contours(contours);
 ```
 ![img](.thumbnails/mask_with_meters.png)
 
+III.2/ Geometric analyses
+
+The last mask above shows that we can play with connected components geometrics to idenfity a pattern that well characterize a vehicle.
+
+More precisely, the idea is to get a distribution of height, width of bounding boxes of connected components to identify a strong cluster.
+
+We expect to identify this cluster to well represent isolated and well-segmented vehicles
+
+Let's plot height, width bounding boxes distribution
+
+```
+hv = [shape.bbox[2] - shape.bbox[0] for shape in shapes_normalized]
+wv = [shape.bbox[3] - shape.bbox[1] for shape in shapes_normalized]
+plt.scatter(hv,wv);
+plt.xlabel("width")
+plt.ylabel("height")
+plt.title("(width, height) distribution of connected components")
+plt.show()
+```
+
+![img](.thumbnails/hw_distrib.png)
+
+As expected, there is a good insight here as we show that most point are centered around (height=4m, width=3m). But there is a room for improvement as vehicule can be rotated making height, width vehicles not exacty equal to the bounding box width, height.
+
+That's why we propose to get better height, width vehicle by fitting the best rectangle using on each connected component.
+
+```
+from src.core.morphology import find_cc_best_enclosing_rectangles
+find_cc_best_enclosing_rectangles(shapes_normalized, contours)
+```
+
+Here after an illustration showing the best rectangle in red pixels
+
+![img](.thumbnails/best_rectangle.png)
