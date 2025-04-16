@@ -305,6 +305,7 @@ We expect to identify this cluster to well represent isolated and well-segmented
 Let's plot height, width bounding boxes distribution
 
 ```
+import matplotlib.pyplot as plt
 hv = [shape.bbox[2] - shape.bbox[0] for shape in shapes_normalized]
 wv = [shape.bbox[3] - shape.bbox[1] for shape in shapes_normalized]
 plt.scatter(hv,wv);
@@ -325,6 +326,42 @@ from src.core.morphology import find_cc_best_enclosing_rectangles
 find_cc_best_enclosing_rectangles(shapes_normalized, contours)
 ```
 
-Here after an illustration showing the best rectangle in red pixels
+Here after an illustration showing the best rectangle in red pixels for one of the connected component:
 
 ![img](.thumbnails/best_rectangle.png)
+
+How does the height, width distribution behaves? let's see it:
+
+```
+hv = [shape.rectangle_height for shape in shapes_normalized]
+wv = [shape.rectangle_width for shape in shapes_normalized]
+plt.scatter(hv,wv);
+plt.xlabel("width")
+plt.ylabel("height")
+plt.title("(width, height) distribution of rectangle that best enclosed connected components")
+plt.show()
+```
+
+![img](.thumbnails/hw_distrib_pp.png)
+
+As expected, we finally get a more compact cluster showing that there is a simple pattern to separate well isolated and segmented vehicule to other connected components
+
+Now let's now get a Gaussian that fit that 2D (height, width) distribution
+
+```
+import numpy as np
+import sklearn
+
+gm = sklearn.mixture.GaussianMixture(n_components=1) # we use a mixture of gaussians model with only one component
+X = np.concatenate((np.array(hv)[:,np.newaxis],np.array(wv)[:,np.newaxis]), axis=1)
+gm.fit(X)
+scorev = gm.score_samples(X)
+
+sc = plt.scatter(hv, wv, c=scorev)
+plt.colorbar(sc)
+plt.title("Negative log-likelihood predicted by the Gaussian Mixture")
+plt.axis("tight")
+plt.show()
+```
+
+![img](.thumbnails/gaussian.png)
