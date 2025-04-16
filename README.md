@@ -308,7 +308,7 @@ Let's plot height, width bounding boxes distribution
 import matplotlib.pyplot as plt
 hv = [shape.bbox[2] - shape.bbox[0] for shape in shapes_normalized]
 wv = [shape.bbox[3] - shape.bbox[1] for shape in shapes_normalized]
-plt.scatter(hv,wv);
+plt.scatter(wv,hv);
 plt.xlabel("width")
 plt.ylabel("height")
 plt.title("(width, height) distribution of connected components")
@@ -317,7 +317,7 @@ plt.show()
 
 ![img](.thumbnails/hw_distrib.png)
 
-As expected, there is a good insight here as we show that most point are centered around (height=4m, width=3m). But there is a room for improvement as vehicule can be rotated making height, width vehicles not exacty equal to the bounding box width, height.
+As expected, there is a good insight here as we show that most point are centered. But there is a room for improvement as vehicule can be rotated making height, width vehicles not exacty equal to the bounding box width, height.
 
 That's why we propose to get better height, width vehicle by fitting the best rectangle using on each connected component.
 
@@ -335,7 +335,7 @@ How does the height, width distribution behaves? let's see it:
 ```
 hv = [shape.rectangle_height for shape in shapes_normalized]
 wv = [shape.rectangle_width for shape in shapes_normalized]
-plt.scatter(hv,wv);
+plt.scatter(wv,hv);
 plt.xlabel("width")
 plt.ylabel("height")
 plt.title("(width, height) distribution of rectangle that best enclosed connected components")
@@ -344,7 +344,7 @@ plt.show()
 
 ![img](.thumbnails/hw_distrib_pp.png)
 
-As expected, we finally get a more compact cluster showing that there is a simple pattern to separate well isolated and segmented vehicule to other connected components
+As expected, we finally get a more compact cluster showing that there is a simple pattern to separate well isolated and segmented vehicule to other connected components, this pattern shows that vehicle are around 2 meters X 5 meters which can decently represent trucks.
 
 Now let's now get a Gaussian that fit that 2D (height, width) distribution
 
@@ -353,14 +353,16 @@ import numpy as np
 import sklearn
 
 gm = sklearn.mixture.GaussianMixture(n_components=1) # we use a mixture of gaussians model with only one component
-X = np.concatenate((np.array(hv)[:,np.newaxis],np.array(wv)[:,np.newaxis]), axis=1)
+X = np.concatenate((np.array(wv)[:,np.newaxis],np.array(hv)[:,np.newaxis]), axis=1)
 gm.fit(X)
 scorev = gm.score_samples(X)
 
-sc = plt.scatter(hv, wv, c=scorev)
+sc = plt.scatter(wv, hv, c=scorev)
 plt.colorbar(sc)
 plt.title("Negative log-likelihood predicted by the Gaussian Mixture")
 plt.axis("tight")
+plt.xlabel("width")
+plt.ylabel("height")
 plt.show()
 ```
 
