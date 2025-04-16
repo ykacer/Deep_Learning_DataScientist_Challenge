@@ -52,7 +52,7 @@ In that context, [RetinaNet (FAIR - 2017)](https://arxiv.org/pdf/1708.02002) is 
 
   RetinaNet extends classical cross entropy loss by multiplying the class probability log with a specific term called "focal" term. This term is supposed to lower the loss contribution when probability is close to 1 (which likely correspond to "easy" background majority class examples). This factor comes with a positive integer exponent to control how much you need to counter balance background "easy" examples. The following figure illustrates well factor impact:
 
-  ![img](https://www.researchgate.net/publication/372352175/figure/fig5/AS:11431281212128348@1702549855629/Focal-loss-LFL-graphs-vs-probability-of-ground-truth-class-pt-depending-on-focusing.tif)
+  ![img](.thumbnails/focal_loss.png "How focal loss penalize easy examples")
 
 In the next subsections, we will depict how we can enhance a RetinaNet in the context of aircrafts detection on aerial images, taking into account all quantitatives assumptions we have, particularly the time budget of 5 mins. There are 5 subsections described by decreasing priority order (get simple things done first)
 
@@ -138,9 +138,9 @@ Following changes are more groundbreaking and need much experimentation time to 
 
 * Training can be performed from a RetineNet checkpoint trained on larger dataset like COCO
 
-* Backbone Resnet50 can be progressively replaced by Resnet100 and then resnet 152 while carrefully assessed that you are not overfitting (hopefully, our data size is in the order of magnitude of CIFAR used by Resnet authors). TFLOPS operations increasing is sublinear so we should still be under the 5 mins budget
+* Backbone Resnet50 can be progressively replaced by Resnet100 and then resnet 152 while carrefully assessed that you are not overfitting (hopefully, our data size is in the order of magnitude of CIFAR used by Resnet authors). TFLOPS operations increasing is linear so we should still be under the 5 mins budget
 
-![img](https://www.researchgate.net/publication/389861113/figure/tbl2/AS:11431281316062899@1742024172673/Number-of-parameters-and-floating-point-operations-FLOPs-for-ResNet-34-ResNet-50-and.png)
+![img](.thumbnails/resnet_tflops.png "Resnet architectures and TFLOPS")
 
 * If RetinaNet FPN is not using all layer maps, try adding more (specifically add the first conv maps if small objects are missing)
 
