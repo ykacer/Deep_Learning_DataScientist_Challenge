@@ -254,7 +254,7 @@ At the bottom right, we can identify the Geographic Coordinate System for the po
 We will further use [utm](https://pypi.org/project/utm/) python package to convert those points into `UTM` Project Coordinate System and get points as (x,y) coordinates in meters.
 
 
-But first, we need to load the shapes using [pyshapefile](https://pypi.org/project/pyshp/) python package to read the shapefile containing a bouding box and polygons points list associated to each shape.
+But first, we need to load the shapes using [pyshapefile](https://pypi.org/project/pyshp/) python package to read the shapefile containing a bouding box and a polygon points list associated to each shape.
 
 
 ```
@@ -281,20 +281,20 @@ We can get the limit of the zone in terms of Geographic Coordinates (longitude, 
 Let's then project the Geographic Coordinates into meters Project Coordinates UTM ...
 
 ```
-from src.utils.converter import project_and_normalize_shapes
-shapes_normalized = project_and_normalize_shapes(shapes)
+>>> from src.utils.converter import project_and_normalize_shapes
+>>> shapes_normalized = project_and_normalize_shapes(shapes)
 ```
 
 ... and use a function to re-build the mask with project meters coordinates
 
 ```
-from src.core.morphology import get_cv2_contours_from_shapes
-from src.utils.display import draw_cc_from_contours
-draw_cc_from_contours(contours);
+>>> from src.core.morphology import get_cv2_contours_from_shapes
+>>> from src.utils.display import draw_cc_from_contours
+>>> draw_cc_from_contours(contours);
 ```
 ![img](.thumbnails/mask_with_meters.png)
 
-III.2/ Geometric analyses
+## III.2/ Geometric analyses
 
 The last mask above shows that we can play with connected components geometrics to idenfity a pattern that well characterize a vehicle.
 
@@ -305,14 +305,14 @@ We expect to identify this cluster to well represent isolated and well-segmented
 Let's plot height, width bounding boxes distribution
 
 ```
-import matplotlib.pyplot as plt
-hv = [shape.bbox[2] - shape.bbox[0] for shape in shapes_normalized]
-wv = [shape.bbox[3] - shape.bbox[1] for shape in shapes_normalized]
-plt.scatter(wv,hv);
-plt.xlabel("width")
-plt.ylabel("height")
-plt.title("(width, height) distribution of connected components")
-plt.show()
+>>> import matplotlib.pyplot as plt
+>>> hv = [shape.bbox[2] - shape.bbox[0] for shape in shapes_normalized]
+>>> wv = [shape.bbox[3] - shape.bbox[1] for shape in shapes_normalized]
+>>> plt.scatter(wv,hv);
+>>> plt.xlabel("width")
+>>> plt.ylabel("height")
+>>> plt.title("(width, height) distribution of connected components")
+>>> plt.show()
 ```
 
 ![img](.thumbnails/hw_distrib.png)
@@ -322,24 +322,24 @@ As expected, there is a good insight here as we show that most point are centere
 That's why we propose to get better height, width vehicle by fitting the best rectangle using on each connected component.
 
 ```
-from src.core.morphology import find_cc_best_enclosing_rectangles
-find_cc_best_enclosing_rectangles(shapes_normalized, contours)
+>>> from src.core.morphology import find_cc_best_enclosing_rectangles
+>>> find_cc_best_enclosing_rectangles(shapes_normalized, contours)
 ```
 
 Here after an illustration showing the best rectangle in red pixels for one of the connected component:
 
 ![img](.thumbnails/best_rectangle.png)
 
-How does the height, width distribution behaves? let's see it:
+How does the height, width distribution behaves now? let's see it:
 
 ```
-hv = [shape.rectangle_height for shape in shapes_normalized]
-wv = [shape.rectangle_width for shape in shapes_normalized]
-plt.scatter(wv,hv);
-plt.xlabel("width")
-plt.ylabel("height")
-plt.title("(width, height) distribution of rectangle that best enclosed connected components")
-plt.show()
+>>> hv = [shape.rectangle_height for shape in shapes_normalized]
+>>> wv = [shape.rectangle_width for shape in shapes_normalized]
+>>> plt.scatter(wv,hv);
+>>> plt.xlabel("width")
+>>> plt.ylabel("height")
+>>> plt.title("(width, height) distribution of rectangle that best enclosed connected components")
+>>> plt.show()
 ```
 
 ![img](.thumbnails/hw_distrib_pp.png)
@@ -349,21 +349,21 @@ As expected, we finally get a more compact cluster showing that there is a simpl
 Now let's now get a Gaussian that fit that 2D (height, width) distribution
 
 ```
-import numpy as np
-import sklearn
+>>> import numpy as np
+>>> import sklearn
 
-gm = sklearn.mixture.GaussianMixture(n_components=1) # we use a mixture of gaussians model with only one component
-X = np.concatenate((np.array(wv)[:,np.newaxis],np.array(hv)[:,np.newaxis]), axis=1)
-gm.fit(X)
-scorev = gm.score_samples(X)
+>>> gm = sklearn.mixture.GaussianMixture(n_components=1) # we use a mixture of gaussians model with only one component
+>>> X = np.concatenate((np.array(wv)[:,np.newaxis],np.array(hv)[:,np.newaxis]), axis=1)
+>>> gm.fit(X)
+>>> scorev = gm.score_samples(X)
 
-sc = plt.scatter(wv, hv, c=scorev)
-plt.colorbar(sc)
-plt.title("Negative log-likelihood predicted by the Gaussian Mixture")
-plt.axis("tight")
-plt.xlabel("width")
-plt.ylabel("height")
-plt.show()
+>>> sc = plt.scatter(wv, hv, c=scorev)
+>>> plt.colorbar(sc)
+>>> plt.title("Negative log-likelihood predicted by the Gaussian Mixture")
+>>> plt.axis("tight")
+>>> plt.xlabel("width")
+>>> plt.ylabel("height")
+>>> plt.show()
 ```
 
 ![img](.thumbnails/gaussian.png)
