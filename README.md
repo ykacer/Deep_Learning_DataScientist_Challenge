@@ -294,6 +294,8 @@ Let's then project the Geographic Coordinates into meters Project Coordinates UT
 ```
 ![img](.thumbnails/mask_with_meters.png)
 
+**Verrification**: we have an image of size `2500x2500` pixels approximatively where meters dimension have been mutliplied by a factor of `10`. So if we compute the true perimeter as `P = 4 * 2500 * / 10 = 1000m²` we find something close to the `919m²` displayed above by Google Earth interface.
+
 ## III.2/ Geometric analyses
 
 The last mask above shows that we can play with connected components geometrics to idenfity a pattern that well characterize a vehicle.
