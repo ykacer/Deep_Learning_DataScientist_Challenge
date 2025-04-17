@@ -36,7 +36,6 @@ def draw_cc_from_contours(contours: List[np.ndarray], plot: bool =True, color: t
         image_mask = np.flipud(image_mask)
         # plot image
         plt.imshow(image_mask)
-        plt.title("mask segmentation reconstructed using polygon in meters")
         plt.show()
     return image_mask
 

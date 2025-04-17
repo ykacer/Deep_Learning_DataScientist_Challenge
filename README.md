@@ -251,7 +251,7 @@ By adjusting the color transparency we can get an explorable illustration of the
 
 At the bottom right, we can identify the Geographic Coordinate System for the points, it is `EPSG:4326` also known as `WGS84`.
 
-We will further use [utm](https://pypi.org/project/utm/) python package to convert those points into `UTM` Project Coordinate System and get points as (x,y) coordinates in meters.
+We will further use [utm](https://pypi.org/project/utm/) python package to convert those points into `UTM` Projected Coordinates System and get points as (x,y) coordinates in meters.
 
 
 But first, we need to load the shapes using [pyshapefile](https://pypi.org/project/pyshp/) python package to read the shapefile containing a bouding box and a polygon points list associated to each shape.
@@ -265,7 +265,7 @@ But first, we need to load the shapes using [pyshapefile](https://pypi.org/proje
 73
 ```
 
-We can get the limit of the zone in terms of Geographic Coordinates (longitude, latitude) and identify the zone in Google Earth (Syria):
+We can get the limit of the zone in terms of WGS84 Geographic Coordinates (longitude, latitude) and identify the zone in Google Earth (Syria):
 
 ```
 >>> from src.utils.coordinates import get_bounding_box_zone
@@ -285,7 +285,7 @@ Let's then project the Geographic Coordinates into meters Project Coordinates UT
 >>> shapes_normalized = project_and_normalize_shapes(shapes)
 ```
 
-... and use a function to re-build the mask with project meters coordinates
+... and use a function to re-build the mask with projected meters coordinates
 
 ```
 >>> from src.core.morphology import get_cv2_contours_from_shapes
@@ -294,7 +294,7 @@ Let's then project the Geographic Coordinates into meters Project Coordinates UT
 ```
 ![img](.thumbnails/mask_with_meters.png)
 
-**Verrification**: we have an image of size `2500x2500` pixels approximatively where meters dimension have been mutliplied by a factor of `10`. So if we compute the true perimeter as `P = 4 * 2500 * / 10 = 1000m²` we find something close to the `919m²` displayed above by Google Earth interface.
+**Verification**: we have an image of size `2500x2500` pixels approximatively, where meters dimensions have been mutliplied by a factor of `10`. So if we compute the true perimeter as `P = 4 * 2500 / 10 = 1000m²`, we find a value close to the `919m²` displayed above by Google Earth interface.
 
 ## III.2/ Geometric analyses
 
@@ -321,7 +321,7 @@ Let's plot height, width bounding boxes distribution
 
 As expected, there is a good insight here as we show that most point are centered. But there is a room for improvement as vehicule can be rotated making height, width vehicles not exacty equal to the bounding box width, height.
 
-That's why we propose to get better height, width vehicle by fitting the best rectangle using on each connected component.
+That's why we propose to get better height, width vehicle by fitting the best rectangle on each connected component using [opencv](https://pypi.org/project/opencv-python/)
 
 ```
 >>> from src.core.morphology import find_cc_best_enclosing_rectangles
@@ -346,7 +346,7 @@ How does the height, width distribution behaves now? let's see it:
 
 ![img](.thumbnails/hw_distrib_pp.png)
 
-As expected, we finally get a more compact cluster showing that there is a simple pattern to separate well isolated and segmented vehicule to other connected components
+As expected, we finally get a more compact cluster showing that there is a simple pattern to separate well-isolated-and-segmented vehicules to other connected components
 
 Let's confirm that assumption by fitting a 2D (width, height) Gaussian distribution and plot the scores to show *goodness of fit* of each connected component
 
@@ -370,12 +370,14 @@ Let's confirm that assumption by fitting a 2D (width, height) Gaussian distribut
 
 ![img](.thumbnails/gaussian.png)
 
-The gaussian mxiture provides an estimate of average vehicle size which is around 3 meters X 5,5 meters (not far from the order of magnitude of real trucks sizes)
+The gaussian mxiture provides an estimate of average vehicle size which is around `3m X 5,5m` (not far from the order of magnitude of real trucks sizes)
 
 ```
 >>> print(gm.means_)
 [[3.02695946 5.42500136]]
 ```
+
+**Improvment**: we could get even better clusterisation by enriching height, width with other features like the ratio between vehicle area and rectangle area.
 
 ## III.3/ Connected components selection
 
