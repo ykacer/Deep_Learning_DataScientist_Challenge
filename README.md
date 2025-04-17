@@ -344,9 +344,9 @@ How does the height, width distribution behaves now? let's see it:
 
 ![img](.thumbnails/hw_distrib_pp.png)
 
-As expected, we finally get a more compact cluster showing that there is a simple pattern to separate well isolated and segmented vehicule to other connected components, this pattern shows that vehicle are around 2 meters X 5 meters which can decently represent trucks.
+As expected, we finally get a more compact cluster showing that there is a simple pattern to separate well isolated and segmented vehicule to other connected components
 
-Now let's now get a Gaussian that fit that 2D (height, width) distribution
+Let's confirm that assumption by fitting a 2D (width, height) Gaussian distribution and plot the scores to show *goodness of fit* of each connected component
 
 ```
 >>> import numpy as np
@@ -367,3 +367,81 @@ Now let's now get a Gaussian that fit that 2D (height, width) distribution
 ```
 
 ![img](.thumbnails/gaussian.png)
+
+The gaussian mxiture provides an estimate of average vehicle size which is around 3 meters X 5,5 meters (not far from the order of magnitude of real trucks sizes)
+
+```
+>>> print(gm.means_)
+[[3.02695946 5.42500136]]
+```
+
+## III.3/ Connected components selection
+
+From here, we can use the Gaussian Mixture model and apply a threshold `thresh` on Negative log-likelihood score to get
+- connected components with log-likelihood above `thresh`, meaning the connected component is a well single segmented vehicle
+- connected components with likelihood under `thresh` meaning the connected component is one of the two outliers subcategories
+    - single but not well segmented vehicle or a false alarm
+    - many vehicles merged into one segment
+
+The two outliers subcategories can then be separated by comparing `height x weight` product to the Gaussian mean (below and above to respectively get the first subcategory and the second one)
+
+
+Let's execute the following function that apply the process from gaussian fitting to the two outliers subcategories groups, using the shapes with their best enclosing rectangles
+
+```
+from src.core.morphology import find_cc_outliers
+mean_size, contours_good_category, contours_outliers_subcategory1, contours_outliers_subcategory2, index_good_category, index_outliers_subcategory1, index_outliers_subcategory2 = find_cc_outliers(shapes_normalized, contours, thresh=-3.1, plot=True)
+```
+
+We find `threshold = -3.1` to be a good trade-off, here are the displayed results:
+- Single not well segmented or fa in yellow
+- Merged vehcles in red
+- Good segmentations in white
+
+```
+from src.utils.display import draw_cc_categories_from_contours
+draw_cc_categories_from_contours(contours_good_category, contours_outliers_subcategory1, contours_outliers_subcategory2)
+```
+![img](.thumbnails/mask_with_selection.png)
+
+## III.4/ Vehicle counting
+
+The following table enumerates vehicles according to their category
+
+| category | counting |
+|-------------|-------|
+| good vehicles      | 41   |
+| single not well segmented vehicles or fa | 14 |
+| merged vehicles | 18 |
+
+We can loop over *merged vehicles*, get the number of connected component pixels (equivalent to area of the supposed merged vehicles) and divide it by the the mean vehicle size (gaussian average). The closest integer can then be interpreted as the true number of vehicles and enrich the counting for the *good vehicles*.
+
+```
+>>> merged_vehicles_recounting = 0
+>>> for cc_index in index_outliers_subcategory2:
+    ... recounting = round(shapes_normalized[cc_index].vehicles_area/mean_size)
+    ... merged_vehicles_recounting += recounting
+>>> print(merged_vehicles_recounting)
+42
+```
+
+Finally, we can a display finer distribution of the categories counts
+
+| category | counting |
+|-------------|-------|
+| good vehicles      | 41 + 42 = 83  |
+| single not well segmented vehicles or fa | 14 |
+
+In the last subsection, we propose a solution to handle the last subcategory of outliers : those which are single not well segmented vehicles or false alarms and better recounting them
+
+## III.4/ Single not well segmented vehicles or false alarm
+
+In this subsection, we briefly propose a solution to keep the true vehicles and discard the false alarm.
+
+We have a single connected component for each but also the cropped image of the associated zone using the tif raster.
+
+It could be interesting to use Watershed Segmentation to do a finer and fast segmentation. The connected could eroded and used as marker for the Watershaed.
+The resulting segment can then used to get:
+- the best enclosing rectangle
+- verify is it fit with the Gaussian model using our threshold
+- those that pass the Gaussian "goodness of fit" can be considered true vehicle while other are discarded
