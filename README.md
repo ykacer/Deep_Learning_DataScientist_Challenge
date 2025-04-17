@@ -444,7 +444,7 @@ In this subsection, we briefly propose a solution to keep the true vehicles and 
 
 We have a single connected component for each but also the cropped image of the associated zone using the tif raster.
 
-It could be interesting to use Watershed Segmentation to do a finer and fast segmentation. The connected could eroded and used as marker for the Watershaed.
+It could be interesting to use Watershed Segmentation to do a finer and fast segmentation. The connected could be eroded a little bit and used as marker for the Watershaed.
 The resulting segment can then used to get:
 - the best enclosing rectangle
 - verify is it fit with the Gaussian model using our threshold
