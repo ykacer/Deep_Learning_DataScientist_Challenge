@@ -23,8 +23,6 @@ def project_and_normalize_shapes(shapes: List[shapefile.Shape]):
     lower_long = get_lower_long_coordinate(shapes)
     lower_lat = get_lower_lat_coordinate(shapes)
     (lower_x, lower_y) = utm.from_latlon(lower_lat, lower_long)[:2]
-    lower_x = lower_x - 10 # add 10 meters margin
-    lower_y = lower_y - 10 # add 10 meters margin
     
     # loop over shapes to convert to meters and substract minimal (x,y)
     shapes_normalized_list = []

@@ -23,9 +23,9 @@ def draw_cc_from_contours(contours: List[np.ndarray], plot: bool =True, color: t
 
     # get width, height image
     if width < 0:
-        width = np.max(np.concatenate(contours, axis=0)[:,:,0]) + 100 # add margin
-    if height < 0:
-        height = np.max(np.concatenate(contours, axis=0)[:,:,1]) + 100
+        width = np.max(np.concatenate(contours, axis=0)[:,:,0]) 
+    if height < 0
+        height = np.max(np.concatenate(contours, axis=0)[:,:,1]) 
     # draw contours
     image_mask = np.zeros((height, width)).astype(np.uint8)
     image_mask = cv2.cvtColor(image_mask, cv2.COLOR_GRAY2BGR)
@@ -72,8 +72,8 @@ def draw_cc_categories_from_contours(contours_good_category: List[np.ndarray], c
     '''
     # Define width, height image
     all_contours = contours_good_category + contours_outliers_subcategory1 + contours_outliers_subcategory1
-    width = np.max(np.concatenate(all_contours, axis=0)[:,:,0]) + 100 # add margin
-    height = np.max(np.concatenate(all_contours, axis=0)[:,:,1]) + 100
+    width = np.max(np.concatenate(all_contours, axis=0)[:,:,0])
+    height = np.max(np.concatenate(all_contours, axis=0)[:,:,1])
 
     # first subcategory in yellow (not well segmented single vehicle or fa)
     image_mask1 = draw_cc_from_contours(contours_outliers_subcategory1, color=(255, 255, 0), plot=False, height=height, width=width)

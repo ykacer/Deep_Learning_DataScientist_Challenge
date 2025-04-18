@@ -293,7 +293,7 @@ Let's then project the Geographic Coordinates into meters Project Coordinates UT
 ```
 ![img](.thumbnails/mask_with_meters.png)
 
-**Verification**: we have an image of size `2500x2500` pixels approximatively, where meters dimensions have been mutliplied by a factor of `10`. So if we compute the true perimeter as `P = 4 * 2500 / 10 = 1000m²`, we find a value close to the `919m²` displayed above by Google Earth interface.
+**Verification**: we have an image of size `2500x2200` pixels approximatively, where meters dimensions have been mutliplied by a factor of `10`. So if we compute the true perimeter as `P = 2 * (2500/10) + 2 * (2000/10) = 940m²`, we find a value close to the `919m²` displayed above by Google Earth interface.
 
 ## III.2/ Geometric analyses
 
